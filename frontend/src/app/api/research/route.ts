@@ -2,6 +2,9 @@ import type { NextRequest } from "next/server";
 
 // The research pipeline is long-running and streamed — never cache, never prerender.
 export const dynamic = "force-dynamic";
+// Allow the streamed proxy to run as long as the pipeline needs (seconds).
+// Raise this on hosts/plans that permit longer serverless execution.
+export const maxDuration = 300;
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 
@@ -25,20 +28,28 @@ export async function POST(request: NextRequest) {
   }
 
   // 1) Try the real FastAPI backend first.
+  //    The timeout must only guard the *connection* (until headers arrive) —
+  //    once the stream is open it can run as long as the pipeline needs, so we
+  //    clear the timer as soon as fetch resolves. Client disconnects are
+  //    forwarded upstream so cancelling a run actually stops the backend.
   try {
+    const controller = new AbortController();
+    const onClientAbort = () => controller.abort();
+    request.signal.addEventListener("abort", onClientAbort);
+    const connectTimer = setTimeout(() => controller.abort(), 6000);
+
     const upstream = await fetch(`${BACKEND_URL}/api/research`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, provider }),
-      // Abort the connection attempt fast so we can fall back to the demo.
-      signal: AbortSignal.timeout(3500),
+      signal: controller.signal,
     });
+    clearTimeout(connectTimer); // headers received — let the body stream freely
 
     if (upstream.ok && upstream.body) {
-      return new Response(upstream.body, {
-        headers: streamHeaders(),
-      });
+      return new Response(upstream.body, { headers: streamHeaders() });
     }
+    request.signal.removeEventListener("abort", onClientAbort);
   } catch {
     /* backend unavailable — fall through to the simulated pipeline */
   }
