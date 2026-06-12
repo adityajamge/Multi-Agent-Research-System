@@ -1,0 +1,32 @@
+# Core framework
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langgraph>=0.2.0
+
+# Model provider (Groq only — active in llms/__init__.py)
+groq
+langchain-groq
+
+# Search
+tavily-python
+
+# Web scraping
+beautifulsoup4
+requests
+lxml
+
+# Async networking
+aiohttp
+httpx
+
+# API backend
+fastapi
+uvicorn[standard]
+
+# Config / utilities
+python-dotenv
+pydantic
+tenacity
+typing-extensions
+rich
