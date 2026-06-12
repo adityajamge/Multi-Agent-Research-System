@@ -8,5 +8,6 @@ class ResearchState(TypedDict):
     scraped_content: str  # BeautifulSoup output from each URL
     report: str           # current draft from Writer
     critique: str         # feedback from Critic
+    score: int            # Critic's latest 1-10 quality score
     revision_count: int   # tracks Writer→Critic loop iterations
     final_report: str     # approved output

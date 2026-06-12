@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Atlas — Multi-Agent Research System (Frontend)
 
-## Getting Started
+A premium, research-first interface for the LangGraph multi-agent pipeline. It
+visualizes the four agents — **Search → Reader → Writer → Critic** — in real
+time over Server-Sent Events, and renders the final report in a rich reading
+surface. Design language follows `DESIGN.md` (Vercel-style: ink on near-white
+canvas, mesh gradient as the single decoration, Geist + Geist Mono).
 
-First, run the development server:
+## Run the frontend
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The UI works **with or without the Python backend**:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Live backend connected** → real Tavily search, real scraping, real Groq
+  report. The header shows a green `live backend` badge.
+- **Backend offline** → the `/api/research` route falls back to a faithful
+  simulated pipeline (header shows `demo mode`), so the full experience is
+  always demonstrable.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Connect the live backend
 
-## Learn More
+From the project's `Backend/` directory (with the venv active and
+`TAVILY_API_KEY` / `GROQ_API_KEY` set in `.env`):
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+uvicorn api:app --reload --port 8000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The frontend proxies to `http://127.0.0.1:8000` by default. Override with an
+env var if needed:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# frontend/.env.local
+BACKEND_URL=http://127.0.0.1:8000
+```
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Layer | File | Responsibility |
+|---|---|---|
+| SSE protocol + types | `src/lib/types.ts` | Event shapes, agent metadata |
+| State machine | `src/lib/useResearch.ts` | Parses the SSE stream into live agent state |
+| Route handler | `src/app/api/research/route.ts` | Proxies the backend; simulated fallback |
+| Markdown | `src/lib/markdown.tsx` | Dependency-free report renderer |
+| Pipeline UI | `src/components/Pipeline.tsx`, `AgentCard.tsx` | The four agents lighting up in sequence |
+| Report | `src/components/ReportView.tsx` | Final report + editorial review trail |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The backend SSE contract is defined once in `types.ts` and spoken by both the
+FastAPI bridge (`Backend/api.py`) and the Next.js fallback, so the two are
+interchangeable.

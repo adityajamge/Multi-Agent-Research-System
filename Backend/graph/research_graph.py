@@ -50,20 +50,54 @@ def build_graph(llm_provider: str = "groq", **llm_kwargs) -> "CompiledGraph":
     return graph.compile()
 
 
-def run_research(query: str, llm_provider: str = "groq", **llm_kwargs) -> str:
-    """Run the full research pipeline and return the final report."""
-    graph = build_graph(llm_provider, **llm_kwargs)
-
-    initial_state: ResearchState = {
+def _initial_state(query: str) -> ResearchState:
+    return {
         "query":          query,
         "search_results": "",
         "urls":           [],
         "scraped_content":"",
         "report":         "",
         "critique":       "",
+        "score":          0,
         "revision_count": 0,
         "final_report":   "",
     }
 
-    final_state = graph.invoke(initial_state)
+
+def run_research(query: str, llm_provider: str = "groq", **llm_kwargs) -> str:
+    """Run the full research pipeline and return the final report."""
+    graph = build_graph(llm_provider, **llm_kwargs)
+    final_state = graph.invoke(_initial_state(query))
     return final_state.get("final_report") or final_state.get("report", "No report generated.")
+
+
+def run_research_stream(query: str, llm_provider: str = "groq", **llm_kwargs):
+    """
+    Run the pipeline and yield a structured event for every node as it completes.
+
+    Each yielded item is a plain dict the API layer can serialise to SSE:
+        {"node": <name>, "data": <state-update emitted by that node>}
+
+    LangGraph's `stream(stream_mode="updates")` emits `{node_name: update}` after
+    each node finishes — including each pass of the Writer↔Critic revision loop —
+    so the frontend can light up agents in the real order they execute.
+    """
+    graph = build_graph(llm_provider, **llm_kwargs)
+
+    accumulated: dict = dict(_initial_state(query))
+
+    for chunk in graph.stream(_initial_state(query), stream_mode="updates"):
+        # chunk == {node_name: state_update}
+        for node_name, update in chunk.items():
+            if isinstance(update, dict):
+                accumulated.update(update)
+            yield {"node": node_name, "data": update if isinstance(update, dict) else {}}
+
+    yield {
+        "node": "complete",
+        "data": {
+            "final_report": accumulated.get("final_report")
+            or accumulated.get("report", ""),
+            "revision_count": accumulated.get("revision_count", 0),
+        },
+    }

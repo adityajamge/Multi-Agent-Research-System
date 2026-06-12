@@ -1,26 +1,247 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Design tokens — ported from DESIGN.md (Vercel design language)
+   A stark, light-first system: ink on near-white canvas, mesh gradient as the
+   single decorative voice, Geist sans for narrative, Geist Mono for the
+   technical layer.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --canvas: #ffffff;
+  --canvas-soft: #fafafa;
+  --canvas-soft-2: #f5f5f5;
+
+  /* Ink & text */
+  --ink: #171717;
+  --body: #4d4d4d;
+  --mute: #888888;
+  --on-primary: #ffffff;
+
+  /* Lines */
+  --hairline: #ebebeb;
+  --hairline-strong: #a1a1a1;
+
+  /* Accents (system tokens — used sparingly) */
+  --link: #0070f3;
+  --link-deep: #0761d1;
+  --link-bg-soft: #d3e5ff;
+  --success: #0070f3;
+  --error: #ee0000;
+  --error-soft: #f7d4d6;
+  --error-deep: #c50000;
+  --warning: #f5a623;
+  --warning-soft: #ffefcf;
+  --warning-deep: #ab570a;
+  --violet: #7928ca;
+  --cyan: #50e3c2;
+  --cyan-deep: #29bc9b;
+  --highlight-pink: #ff0080;
+
+  /* Brand mesh-gradient stops */
+  --g-develop-start: #007cf0;
+  --g-develop-end: #00dfd8;
+  --g-preview-start: #7928ca;
+  --g-preview-end: #ff0080;
+  --g-ship-start: #ff4d4d;
+  --g-ship-end: #f9cb28;
+
+  /* Stacked elevation (DESIGN.md Levels 1-5) */
+  --shadow-1: inset 0 0 0 1px #00000014;
+  --shadow-2: 0px 1px 1px #00000005, 0px 2px 2px #0000000a, inset 0 0 0 1px #00000014;
+  --shadow-3: 0px 2px 2px #0000000a, 0px 8px 8px -8px #0000000a, inset 0 0 0 1px #00000014;
+  --shadow-4: 0px 2px 2px #0000000a, 0px 8px 16px -4px #0000000a, inset 0 0 0 1px #00000012;
+  --shadow-5: 0px 1px 1px #00000005, 0px 8px 16px -4px #0000000a, 0px 24px 32px -8px #0000000f, inset 0 0 0 1px #00000012;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-canvas-soft: var(--canvas-soft);
+  --color-canvas-soft-2: var(--canvas-soft-2);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-mute: var(--mute);
+  --color-on-primary: var(--on-primary);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-link: var(--link);
+  --color-link-deep: var(--link-deep);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
+  --color-violet: var(--violet);
+  --color-cyan: var(--cyan);
+  --color-pink: var(--highlight-pink);
+
+  --font-sans: var(--font-geist-sans), "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --shadow-e1: var(--shadow-1);
+  --shadow-e2: var(--shadow-2);
+  --shadow-e3: var(--shadow-3);
+  --shadow-e4: var(--shadow-4);
+  --shadow-e5: var(--shadow-5);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================================================
+   Base
+   ========================================================================== */
+
+* {
+  border-color: var(--hairline);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas-soft);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+::selection {
+  background: var(--ink);
+  color: #f2f2f2;
+}
+
+/* Display type — aggressive negative tracking is part of the brand voice. */
+.display-xl { font-size: clamp(2.25rem, 5vw, 3.25rem); font-weight: 600; line-height: 1.02; letter-spacing: -0.05em; }
+.display-lg { font-size: clamp(1.75rem, 3.5vw, 2.25rem); font-weight: 600; line-height: 1.1; letter-spacing: -0.04em; }
+.display-md { font-size: 1.5rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.04em; }
+.display-sm { font-size: 1.25rem; font-weight: 600; line-height: 1.4; letter-spacing: -0.03em; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* Scrollbars — quiet, on-brand */
+.scroll-quiet { scrollbar-width: thin; scrollbar-color: var(--hairline-strong) transparent; }
+.scroll-quiet::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-quiet::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 9999px; }
+.scroll-quiet::-webkit-scrollbar-thumb:hover { background: var(--hairline-strong); }
+
+/* ============================================================================
+   Brand mesh gradient — the single decorative system, hero scale only.
+   ========================================================================== */
+
+.mesh-gradient {
+  background-color: var(--canvas);
+  background-image:
+    radial-gradient(at 18% 8%, color-mix(in oklch, var(--g-develop-start) 55%, transparent) 0px, transparent 50%),
+    radial-gradient(at 78% 2%, color-mix(in oklch, var(--g-develop-end) 50%, transparent) 0px, transparent 45%),
+    radial-gradient(at 88% 42%, color-mix(in oklch, var(--g-preview-end) 45%, transparent) 0px, transparent 45%),
+    radial-gradient(at 42% 0%, color-mix(in oklch, var(--g-preview-start) 40%, transparent) 0px, transparent 50%),
+    radial-gradient(at 8% 48%, color-mix(in oklch, var(--g-ship-start) 32%, transparent) 0px, transparent 45%),
+    radial-gradient(at 62% 36%, color-mix(in oklch, var(--g-ship-end) 32%, transparent) 0px, transparent 45%);
+  background-size: 200% 200%;
+  animation: mesh-drift 22s ease-in-out infinite alternate;
+}
+
+.text-mesh {
+  background-image: linear-gradient(110deg, var(--g-develop-start), var(--g-preview-start) 38%, var(--g-preview-end) 64%, var(--g-ship-start) 86%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============================================================================
+   Keyframes
+   ========================================================================== */
+
+@keyframes mesh-drift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 60%; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklch, var(--link) 35%, transparent); }
+  70%  { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
+@keyframes flow-dash { to { stroke-dashoffset: -16; } }
+@keyframes caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes grow-width { from { width: 0; } to { width: var(--target-width, 100%); } }
+
+.animate-fade-up { animation: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-in { animation: fade-in 0.5s ease both; }
+.animate-pulse-ring { animation: pulse-ring 1.8s cubic-bezier(0.66, 0, 0, 1) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  .mesh-gradient { animation: none; }
+}
+
+/* Loading dots */
+.loading-dots span {
+  display: inline-block;
+  width: 4px; height: 4px;
+  margin: 0 1.5px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: dot-bounce 1.4s infinite ease-in-out both;
+}
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+/* Shimmer skeleton fill */
+.shimmer {
+  background: linear-gradient(90deg, var(--canvas-soft-2) 25%, #ededed 37%, var(--canvas-soft-2) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* ============================================================================
+   Prose — report rendering
+   ========================================================================== */
+.prose-report { color: var(--body); font-size: 1rem; line-height: 1.75; }
+.prose-report > * + * { margin-top: 1.1em; }
+.prose-report h1 { font-size: 1.875rem; font-weight: 600; letter-spacing: -0.035em; color: var(--ink); line-height: 1.2; margin-top: 0; }
+.prose-report h2 { font-size: 1.375rem; font-weight: 600; letter-spacing: -0.03em; color: var(--ink); margin-top: 2rem; line-height: 1.3; }
+.prose-report h3 { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); margin-top: 1.5rem; }
+.prose-report p { color: var(--body); }
+.prose-report strong { color: var(--ink); font-weight: 600; }
+.prose-report a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+.prose-report ul, .prose-report ol { padding-left: 1.25rem; }
+.prose-report ul { list-style: none; }
+.prose-report ul > li { position: relative; padding-left: 1.1rem; }
+.prose-report ul > li::before {
+  content: ""; position: absolute; left: 0; top: 0.65em;
+  width: 6px; height: 6px; border-radius: 9999px;
+  background: var(--ink);
+}
+.prose-report ol { list-style: decimal; }
+.prose-report li { margin-top: 0.4em; color: var(--body); }
+.prose-report li::marker { color: var(--mute); }
+.prose-report code { font-family: var(--font-mono); font-size: 0.85em; background: var(--canvas-soft-2); padding: 0.1em 0.35em; border-radius: 4px; color: var(--ink); }
+.prose-report blockquote { border-left: 2px solid var(--hairline-strong); padding-left: 1rem; color: var(--mute); }
+.prose-report hr { border: none; border-top: 1px solid var(--hairline); margin: 2rem 0; }

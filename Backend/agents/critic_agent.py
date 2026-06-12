@@ -53,6 +53,7 @@ def critic_agent_node(state: ResearchState, llm) -> dict:
         print(f"[Critic Agent] Max revisions ({MAX_REVISIONS}) reached. Approving.")
         return {
             "critique": "Maximum revisions reached. Report accepted as-is.",
+            "score": state.get("score", 7),
             "final_report": report,
         }
 
@@ -75,12 +76,14 @@ def critic_agent_node(state: ResearchState, llm) -> dict:
     if decision == "approve":
         return {
             "critique":     feedback,
+            "score":        score,
             "final_report": report,
         }
 
     # Revise — increment counter so Writer knows which pass this is
     return {
         "critique":      feedback,
+        "score":         score,
         "revision_count": revision_count + 1,
     }
 
